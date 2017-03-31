@@ -1,3 +1,63 @@
+"""
+
+This file contains all of the interprocess and network communication
+code. The primary abstractions here are the uplink and downlink classes,
+which provide interprocess communication through reciprocal calls to
+push() and pull() methods between connected instances in different
+processes.
+
+Communication is by JSON object (that is, the js equivalent of a python
+dictionary, as opposed to a JSON list or JSON string). The API
+accepts JSON objects as represented by python dictionaries (such as
+those returned by the python's stdlib json module) representing
+a valid JSON heirarchy. Thus, the only constraint is that the JSON
+message being sent is a JSON object at its outer level.
+
+Usage is slightly different than TCP sockets. A server creates a
+listener instance, which listens for connections on a list of IP
+addresses and ports. listener.select() blocks on a list of link objects
+passed to it and the (address, port) pairs it's initialized with,
+returning any link(up- or down-) objects that are ready for reading, and
+new downlink objects resulting from new connections.
+
+Clients create uplink objects that connect() to a server. Importantly,
+an uplink can connect() and push() before the server is ready through 
+use of internal buffering and automatic reconnection attempts.
+
+
+
+    Example server:
+    
+        links = [] 
+    
+        _listener = listener( ['localhost',31415] )
+        
+        while True:
+        
+            readable, new_downlinks = _listener.select(links)
+            
+            for r in readable:
+                
+                 json_obj = r.pull()  
+                 
+                 do_stuff(json_obj)
+            
+            links += new_downlinks
+            
+    Example client:
+    
+        msg =  { 'payload': 'Hello, World!' } 
+
+        up = uplink(addr='localhost',port=31415)
+        
+        up.push(msg)
+            
+            
+Presently, uplink and downlink are implemented as synchronous TCP socket
+wrappers. 
+
+"""
+
 import socket
 import select
 import inspect
@@ -74,7 +134,8 @@ class link(object):
         Add msg to send buffer and attempt to send() all of it. Returns
         the number of bytes send()'ed or an error object.
         """
-        self.sq += msg
+        
+        self.sq += json.dumps(msg)
         return self.send()  
     
     def pull(self):
@@ -156,7 +217,11 @@ class uplink(link):
                        
         self.addr=addr
         self.port=port
-        self.connect_msg = connect_msg
+        
+        if isinstance(connect_msg, dict):
+            self.connect_msg = json.dumps(connect_msg)
+        else:
+            self.connect_msg = connect_msg
         
         self.connect()
         
