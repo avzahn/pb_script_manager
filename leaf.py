@@ -1,6 +1,7 @@
 import os
 import json
 import datetime
+from logging import *
 from transport import *
 from subprocess import Popen, PIPE
 
@@ -22,7 +23,7 @@ class host_interface(object):
         
         self.prefix = 'ssh -p %i %s@%s ' % (sshport,sshuser,addr) 
         
-    def ping status(self):
+    def ping_status(self):
         """
         Call out to the ping utility to test the route to the host
         interface. Return True if route is ok. For the moment, sends a
@@ -91,7 +92,7 @@ class leaf(object):
         self.dispatch = {}
         
         
-        def 
+        def log
         
         
         
