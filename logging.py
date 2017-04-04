@@ -8,15 +8,7 @@ import datetime
  '/home/alex/parport/']
 now = datetime.datetime.utcnow()
 
-def datetime_to_list(dt):
-    """
-    Helper function to turn a datetime object into a list of integers
-    that can be passed to another datetime's __init__
-    """
-    out =  [dt.year, dt.month, dt.day,
-            dt.hour, dt.minute, dt.second, dt.microsecond]
 
-    return out
     
 class tracked_file(object):
     """

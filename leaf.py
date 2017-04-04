@@ -1,6 +1,7 @@
 import os
 import json
 import datetime
+from utils import *
 from logging import *
 from transport import *
 from subprocess import Popen, PIPE
@@ -34,9 +35,7 @@ class host_interface(object):
         # Four test packets, 100 millisecond timeout
         cmd = ['ping','-c','4','-w','.1',self.addr] 
         
-        proc = Popen(cmd, stdout=PIPE, stderr=PIPE)
-        
-        out,err = proc.communicate()
+        out,err = external_call(cmd)
         
         if '0% packet loss' in out:
             return True
