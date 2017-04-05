@@ -77,7 +77,9 @@ class link(object):
     
     def __init__(self):
         
-        # reference to containing object
+        # Reference to containing object. This is a convenience that
+        # almost certainly costs us a circular reference, but it should
+        # be fine at for our (low) performance target.
         self.container = None
         
         self.socket = None

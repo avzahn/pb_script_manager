@@ -25,6 +25,12 @@ class tracked_file(object):
             
         else:
             self.localpath = os.path.join(os.getcwd(),localpath)
+            
+        if downpath != None:
+            if not os.path.isabs(downpath):
+                raise Exception('Downstream path must be absolute')
+                
+        
     
         # Original if there isn't a downstream for the file
         self.downpath = downpath

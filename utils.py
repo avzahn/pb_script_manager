@@ -1,3 +1,6 @@
+import subprocess
+import threading
+
 
 def external_call(cmd, timeout=1, parent=None):
     """
@@ -58,6 +61,18 @@ class external_call_async(object):
 	The current implementation involves launching a new thread within a
 	new thread, so hesitate to launch more than ten or so of these calls
 	at once before heavier testing.
+    
+    This thread within thread approach is probably the single most
+    likely bottleneck for scaling this system. I can think of two ways
+    a better one might work.
+    
+    One option is to move to python 3, and use the new subprocess
+    module's builtin timeout feature. This would still cost us a python
+    thread, but saves the nested second python thread.
+    
+    Another option is to do this inside a c extension. This is both very
+    easy to do and completely nondisruptive, except that the codebase
+    would no longer be pure python.
 	"""
     
     def __init__(self,cmd,timeout=1):
