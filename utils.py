@@ -1,6 +1,6 @@
 import subprocess
 import threading
-
+import datetime
 
 def external_call(cmd, timeout=1, parent=None):
     """
@@ -89,7 +89,17 @@ def datetime_to_list(dt):
     Helper function to turn a datetime object into a list of integers
     that can be passed to another datetime's __init__
     """
+    if dt == None:
+        return None
+        
     out =  [dt.year, dt.month, dt.day,
             dt.hour, dt.minute, dt.second, dt.microsecond]
 
     return out
+    
+def datetime_from_list(l):
+    
+    if l == None:
+        return None
+        
+    return datetime.datetime(*l)
