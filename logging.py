@@ -9,11 +9,7 @@ import os
  'ssh -p 22',
  'alex@cartesianbear.ucsd.edu:/home/alex/parport/',
  '/home/alex/parport/']
- 
- fmt = '%d_%m_%y_%H:%M:%S'
 
-dt.strftime(fmt)
- 
  
 now = datetime.datetime.utcnow()
 
@@ -150,39 +146,41 @@ class tracked_file(object):
         self._last_active = datetime_from_list(d.get('last_active'))
         self._decommissioned=datetime_from_list(d.get('decommissioned'))
             
-    
+
+
+
 class text_logger(object):
-    
-    def __init__(self, name):
-		
-		self.fmt = '%d_%m_%y_%H:%M:%S'
-		
-		
-		
-		day = '(0[1-9]|[12][0-9]|[3][01])'
-month = '(0[1-9]|1[012])'
-year = '([0-9][0-9])'
-hour = '([01][0-9]|2[0-4])'
-minute = '([0-5][0-9])'
-second = '([0-5][0-9])'
 
-pattern = '.*_%s\-%s\-%s\-%s:%s:%s\.active$' % (day,month,year,hour,minute,second)
+    def __init__(self, name, uplink=None):
 
-regex = re.compile(pattern)
-result = regex.match(test)
+        day = '(0[1-9]|[12][0-9]|[3][01])'
+        month = '(0[1-9]|1[012])'
+        year = '([0-9][0-9])'
+        hour = '([01][0-9]|2[0-4])'
+        minute = '([0-5][0-9])'
+        second = '([0-5][0-9])'
 
-result.group(0)
-		
-		
-        pass
-        
-    
+        p = '.*%s_%s\-%s\-%s\-%s:%s:%s\.active$' % (name,day,month,year,hour,minute,second)
+        self.active_file_regex = re.compile(p)
+        self.strftime_fmt = '%d-%m-%y-%H:%M:%S'
+        self.name = name
+
+        found = self.scan_for_activity()
+
+
+        self.current = 
+
     def scan_for_activity(self):
-		
-		found = []
-		
-		files = os.listdir(os.getcwd())
-		
-		for f in files:
-			
-		
+
+        found = []
+
+        files = os.listdir(os.getcwd())
+
+        for f in files:
+
+            if self.active_file_regex.match():
+                found.append(f)
+
+        return found
+
+    def log()
