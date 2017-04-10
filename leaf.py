@@ -12,7 +12,7 @@ class host_interface(object):
     
     def __init__(self, name, addr, port, sshuser, sshport):
         """
-        Self explanatory except that name needs to be unique among all 
+        Self explanatory except that name needs to be unique among all
         host_interface objects.
         """
         
@@ -26,26 +26,25 @@ class host_interface(object):
         
     def ping_status(self):
         """
-        Call out to the ping utility to test the route to the host
-        interface. Return True if route is ok. For the moment, sends a
-        small number of test packets and only returns True if none of
-        them are lost.
+        Call out to the ping utility to test the route to the host interface.
+        Return True if route is ok. For the moment, sends small number of test
+        packets and only returns True if none of them are lost.
         """
         
         # Four test packets, 100 millisecond timeout
         cmd = ['ping','-c','4','-w','.1',self.addr] 
         
-        out,err = external_call(cmd)
+        out,err = external_call([cmd])
         
-        if '0% packet loss' in out:
+        if '0% packet loss' in out[0]:
             return True
         return False
 
 
 class tracked_log(object):
     """
-    Representation of a log file or directory meant to be rsync'd across
-    the network.
+    Representation of a log file or directory meant to be rsync'd across the
+    network.
     """
     
     def __init__(self, path):    

@@ -17,18 +17,17 @@ now = datetime.datetime.utcnow()
     
 class tracked_file(object):
     """
-    Represents a file to be rsynced across the network. Because rsync
-    uses bandwidth to diff files between computers, it's worth avoiding
-    using this class on a large file. Users should consider the higher
-    level text_logger class instead, which breaks up large text log
-    files automatically.
+    Represents a file to be rsynced across the network. Because rsync uses
+    bandwidth to diff files between computers, it's worth avoiding using this
+    class on a large file. Users should consider the higher level 
+    text_log_splitter class instead, which breaks up large text log files
+    automatically.
     
-    Files are tracked across process failures and shutdowns by leaving
-    behind a file <localpath>.active with information about an active
-    tracked file.
+    Files are tracked across process failures and shutdowns by leaving behind a
+    file <localpath>.active with information about an active tracked file.
     
-    The actual rsync call and interprocess communication are left to 
-    entities outside of this file.
+    The actual rsync call and interprocess communication are left to entities
+    outside of this file.
     """
     def __init__(self, localpath,downpath=None):    
     
@@ -57,12 +56,9 @@ class tracked_file(object):
         # UTC datetime of last time this file was written locally
         self._last_write = None
     
-        # UTC datetime beyond which local writes are guaranteed to stop
-        self._last_active = None
-    
-        # UTC datetime for when this file's downstream became inactive.
-        # If this tracked_file does not have a downstream because it
-        # originates locally, this is just self.last_active
+        # UTC datetime for when this file's downstream became inactive. If this
+        # tracked_file does not have a downstream because it originates locally,
+        # this is just the time beyond which there will be no more local writes.
         self._decommissioned = None
         
         self.save_marker()
@@ -87,15 +83,6 @@ class tracked_file(object):
         self.save_marker()
         
     @property
-    def last_active(self):
-        return self._last_active
-        
-    @last_active.setter
-    def last_active(self,val):
-        self._last_active = val
-        self.save_marker()
-        
-    @property
     def decommissioned(self):
         return self._decommissioned
         
@@ -104,25 +91,33 @@ class tracked_file(object):
         self._decommissioned = val
         self.save_marker()
 
-    def print(msg):
+    def write(msg):
         """
-        Print to the tracked_file's path. Don't use this unless this
+        Write to the tracked_file's path. Don't use this unless this
         tracked_file is original (that is, does not have a downstream).
         """
         
         with open(self.path,'a') as f:
-            print>>f,msg
+            f.write(msg)
             f.flush()
             
         self.last_write = now()
-  
+
+    def purge(self):
+        """
+        Don't call this unless last_upload is after last_write and last_write is
+        after decommissioned.
+        """
+        os.remove(self.markerpath)
+        os.remove(self.localpath)
+
+
     def save_marker(self):
         
         d = {'localpath': self.localpath,
             'downpath': self.downpath,
-            'last_upload': datetime_to_list(self._last_upload) ,
+            'last_upload': datetime_to_list(self._last_upload),
             'last_write': datetime_to_list(self._last_write),
-            'last_active': datetime_to_list(self._last_active),
             'decommissioned': datetime_to_list(self._decommissioned)
             }
         
@@ -143,34 +138,51 @@ class tracked_file(object):
         self.downpath = d.get('downpath')
         self._last_upload = datetime_from_list(d.get('last_upload'))
         self._last_write = datetime_from_list(d.get('last_write'))
-        self._last_active = datetime_from_list(d.get('last_active'))
         self._decommissioned=datetime_from_list(d.get('decommissioned'))
-            
 
 
+class text_log_splitter(object):
 
-class text_logger(object):
+    def __init__(self, name, logdir, maxsize):
 
-    def __init__(self, name, uplink=None):
-
-        day = '(0[1-9]|[12][0-9]|[3][01])'
-        month = '(0[1-9]|1[012])'
-        year = '([0-9][0-9])'
-        hour = '([01][0-9]|2[0-4])'
-        minute = '([0-5][0-9])'
-        second = '([0-5][0-9])'
-
-        p = '.*%s_%s\-%s\-%s\-%s:%s:%s\.active$' % (name,day,month,year,hour,minute,second)
-        self.active_file_regex = re.compile(p)
-        self.strftime_fmt = '%d-%m-%y-%H:%M:%S'
         self.name = name
+        self.logdir = logdir
+        self.maxsize = maxsize
+        self.strftime_fmt = '%d-%m-%y-%H:%M:%S'
+        self.tracked_files = []
+        self.current = None
 
-        found = self.scan_for_activity()
+        preexisting = self.scan_for_activity()
 
+        for path in preexisting:
+            self.tracked_files.append(tracked_file(path))
 
-        self.current = 
+        self.new_file()
+
+    def new_file(self):
+
+        fname = '%s_%s' % (self.name, now().strftime(self.strftime_fmt))
+        fname = os.path.join(self.logdir, fname)
+
+        self.current = tracked_file(fname)
+
+        self.tracked_files.append(self.current)
 
     def scan_for_activity(self):
+
+        if self.active_file_regex == None:
+
+            day = '(0[1-9]|[12][0-9]|[3][01])'
+            month = '(0[1-9]|1[012])'
+            year = '([0-9][0-9])'
+            hour = '([01][0-9]|2[0-4])'
+            minute = '([0-5][0-9])'
+            second = '([0-5][0-9])'
+
+            p = '.*%s_%s\-%s\-%s\-%s:%s:%s\.active$' % \
+                (self.name,day,month,year,hour,minute,second)
+
+            self.active_file_regex = re.compile(p)
 
         found = []
 
