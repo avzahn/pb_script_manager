@@ -127,6 +127,12 @@ class tracked_file(object):
             f.write(json.dumps(self.status_dict))
             f.flush()
             
+    def getsize(self):
+		"""
+		Return size of file in bytes
+		"""
+		return os.path.getsize(self.localpath)
+            
     def restore_from_marker(self):
         
         with open(self.markerpath,'r') as f:
@@ -144,10 +150,22 @@ class tracked_file(object):
 class text_log_splitter(object):
 
     def __init__(self, name, logdir, maxsize):
+		"""
+		@name:
+			A name string that as a (name,logdir) pair must be unique
+			
+		@logdir:
+			Working directory for all the files we create
+		
+		@maxsize:
+			Maximum individual filesize, in bytes. Floats are cast to int. MB
+			is probably a more natural unit for our purposes, but this is
+			simpler.
+		"""
 
         self.name = name
         self.logdir = logdir
-        self.maxsize = maxsize
+        self.maxsize = int(maxsize)
         self.strftime_fmt = '%d-%m-%y-%H:%M:%S'
         self.tracked_files = []
         self.current = None
@@ -195,4 +213,10 @@ class text_log_splitter(object):
 
         return found
 
-    def log()
+    def write(self, text):
+		
+		if self.current.getsize > self.maxsize:
+			
+			
+		
+		
