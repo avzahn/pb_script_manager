@@ -2,7 +2,7 @@ import datetime
 import json
 import re
 import os
-
+from utils import *
 ['rsync',
  '-aq',
  '-e',
@@ -11,7 +11,7 @@ import os
  '/home/alex/parport/']
 
  
-now = datetime.datetime.utcnow()
+now = datetime.datetime.utcnow
 
 
     
@@ -91,13 +91,13 @@ class tracked_file(object):
         self._decommissioned = val
         self.save_marker()
 
-    def write(msg):
+    def write(self,msg):
         """
         Write to the tracked_file's path. Don't use this unless this
         tracked_file is original (that is, does not have a downstream).
         """
         
-        with open(self.path,'a') as f:
+        with open(self.localpath,'a') as f:
             f.write(msg)
             f.flush()
             
@@ -123,15 +123,21 @@ class tracked_file(object):
         
         self.status_dict = d
         
+        if not os.path.exists(self.localpath):
+            return
+        
         with open(self.markerpath,'w') as f:
             f.write(json.dumps(self.status_dict))
             f.flush()
             
     def getsize(self):
-		"""
-		Return size of file in bytes
-		"""
-		return os.path.getsize(self.localpath)
+        """
+        Return size of file in bytes
+        """
+        if os.path.exists(self.localpath):
+            return os.path.getsize(self.localpath)
+        else:
+            return 0
             
     def restore_from_marker(self):
         
@@ -150,18 +156,18 @@ class tracked_file(object):
 class text_log_splitter(object):
 
     def __init__(self, name, logdir, maxsize):
-		"""
-		@name:
-			A name string that as a (name,logdir) pair must be unique
-			
-		@logdir:
-			Working directory for all the files we create
-		
-		@maxsize:
-			Maximum individual filesize, in bytes. Floats are cast to int. MB
-			is probably a more natural unit for our purposes, but this is
-			simpler.
-		"""
+        """
+        @name:
+            A name string that as a (name,logdir) pair must be unique
+            
+        @logdir:
+            Working directory for all the files we create
+        
+        @maxsize:
+            Maximum individual filesize, in bytes. Floats are cast to int. MB
+            is probably a more natural unit for our purposes, but this is
+            simpler.
+        """
 
         self.name = name
         self.logdir = logdir
@@ -169,7 +175,7 @@ class text_log_splitter(object):
         self.strftime_fmt = '%d-%m-%y-%H:%M:%S'
         self.tracked_files = []
         self.current = None
-
+        self.active_file_regex = None
         preexisting = self.scan_for_activity()
 
         for path in preexisting:
@@ -208,15 +214,23 @@ class text_log_splitter(object):
 
         for f in files:
 
-            if self.active_file_regex.match():
-                found.append(f)
+            if self.active_file_regex.match(f):
+                found.append(f[:-7])
 
         return found
 
     def write(self, text):
-		
-		if self.current.getsize > self.maxsize:
-			
-			
-		
-		
+        
+        if self.current.getsize() > self.maxsize:
+            self.new_file()
+            self.current.write(text)
+            return self.current
+            
+        self.current.write(text)    
+        
+        return None
+        
+            
+            
+        
+        

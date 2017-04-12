@@ -47,40 +47,40 @@ def external_call(cmds, timeout=1, parent=None):
     return out,err
 
 class external_call_async(object):
-	"""
-	Make a set of nonblocking external calls inside a worker thread that will
+    """
+    Make a set of nonblocking external calls inside a worker thread that will
     safely time out if the external programs don't terminate.
-	
-	stdout and stderr end up in the stdout and stderr members.
-	
-	Usage:
-	
-		ping = external_call_async([['ping', 'equatorialbear.ucsd.edu']])
-	
-		if ping.worker.is_alive():
-			sleep(1) # or something else while we wait
-			
-		if ping.stderr[0]:
-			do_error_handling()
-		
-		ret = ping.stdout[0]
-	
-	
-	The current implementation involves launching a new thread within a	new
+    
+    stdout and stderr end up in the stdout and stderr members.
+    
+    Usage:
+    
+        ping = external_call_async([['ping', 'equatorialbear.ucsd.edu']])
+    
+        if ping.worker.is_alive():
+            sleep(1) # or something else while we wait
+            
+        if ping.stderr[0]:
+            do_error_handling()
+        
+        ret = ping.stdout[0]
+    
+    
+    The current implementation involves launching a new thread within a new
     thread, so definitely try to batch call external programs within a single
     external_call_async.
-	"""
+    """
     
     def __init__(self,cmds,timeout=1):
         """
-        See external call. cmds and timeout are the exact same thing.
+        See external call. cmds and timeout are the same as there.
         """
         
         self.stdout = None
         self.stderr = None
         
         self.worker = threading.Thread(target=external_call,
-			args=(cmds,timeout,self))
+            args=(cmds,timeout,self))
         self.worker.start()
         
 def datetime_to_list(dt):

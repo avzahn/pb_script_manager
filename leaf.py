@@ -2,9 +2,8 @@ import os
 import json
 import datetime
 from utils import *
-from logging import *
+from text import *
 from transport import *
-from subprocess import Popen, PIPE
 
 now = datetime.datetime.utcnow()
 
@@ -39,36 +38,6 @@ class host_interface(object):
         if '0% packet loss' in out[0]:
             return True
         return False
-
-
-class tracked_log(object):
-    """
-    Representation of a log file or directory meant to be rsync'd across the
-    network.
-    """
-    
-    def __init__(self, path):    
-    
-        if os.path.isabs(path):
-            self.path = path
-            
-        else:
-            self.path = os.path.join(os.getcwd(),path)
-            
-        # Do we expect further writes to this path?
-        self.active = True
-        
-        # UTC datetime of last known upstream rsync of this log path
-        self.last_fetched = None
-        
-        # UTC datetime of the last write to this path
-        self.decommission_time = False
-        
-    def decommission(self):
-        
-        self.active = False
-        self.decommision_time = now()
-        
         
 class leaf(object):
     
